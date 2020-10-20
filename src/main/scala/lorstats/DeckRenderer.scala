@@ -16,6 +16,7 @@ object DeckRenderer {
       val path         = Files.write(tempHtmlFile, imageHtml.getBytes(StandardCharsets.UTF_8))
       val tempPngFile  = Files.createTempFile("deck", ".png")
       s"wkhtmltoimage --width 412 file://${path.toAbsolutePath()} ${tempPngFile.toAbsolutePath()}" ! ProcessLogger(_ => ())
+      tempHtmlFile.toFile().delete()
       tempPngFile
     }
   }
