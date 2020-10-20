@@ -25,6 +25,7 @@ class CommandRunner(client: DiscordClient, cardList: NonEmptyList[Card], blocker
     Deck.decode(deckCode) match {
       case Successful(deck) =>
         val deckWithMetadata = deck.cards.map { case (card, count) => cardList.find(_.cardCode == card.code).get -> count }
+        // TODO: Add template while deck is rendering since it can take a few seconds
         DeckRenderer.renderDeck(deckWithMetadata).flatMap { path =>
           client.sendFile(path.toFile(), channelId, blocker).void
         }

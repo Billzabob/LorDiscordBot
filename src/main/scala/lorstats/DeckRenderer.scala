@@ -41,6 +41,8 @@ object DeckRenderer {
           margin: 0px;
           color: #B8854A;
           background-color: #1A1515;
+          border-top-right-radius: 6px;
+          border-bottom-right-radius: 6px;
         }
         </style>
       </head>
@@ -48,5 +50,5 @@ object DeckRenderer {
     </html>"""
 
   private def cardHtml(code: String, count: Int) =
-    s"<div><img src='https://raw.githubusercontent.com/rikumiyao/hs-deck-viewer/master/src/resources/LorTiles/$code.png'><span>$count</span></div>"
+    s"<div><img src='https://raw.githubusercontent.com/rikumiyao/hs-deck-viewer/master/src/resources/LorTiles/$code.png' height=72 width=357><span>$count</span></div>"
 }
