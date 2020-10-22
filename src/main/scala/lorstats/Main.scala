@@ -42,7 +42,8 @@ object Main extends IOApp {
         val report = newMatches.evalMap { case GameInfo(account, game) =>
           val player    = game.info.players.filter(_.puuid == account.puuid).head
           val winOrLose = if (player.gameOutcome == "win") "WON" else "LOST"
-          val embed     = Embed.make.withTitle(s"${account.gameName} $winOrLose a LoR match!").addField(Field("deck code", player.deckCode, None))
+          val ranked    = if (game.info.gameType == "Ranked") "ranked " else ""
+          val embed     = Embed.make.withTitle(s"${account.gameName} $winOrLose a ${ranked}LoR match!").addField(Field("deck code", player.deckCode, None))
           discord.client.sendEmbed(embed, memesChannelId).void
         }
 
@@ -50,7 +51,7 @@ object Main extends IOApp {
           val commandRunner = new CommandRunner(discord.client, cards, blocker)
           Stream(
             eventsStream.evalMap(handleEvents(commandRunner)).drain,
-            repeatWithDelay(report, 90.seconds).drain
+            repeatWithDelay(report, 2.minutes).drain
           ).parJoinUnbounded.compile.drain
         }
       }

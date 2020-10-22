@@ -1,24 +1,21 @@
 package lorstats
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
+import java.io.File
+import java.nio.file.{Files}
 import lorstats.model.Card
 import sys.process._
 
 object DeckRenderer {
-  def renderDeck(deck: Map[Card, Int]): IO[Path] = {
+  def renderDeck(deck: Map[Card, Int]): Resource[IO, File] = {
     val cards     = deck.toList.sortBy(_._1.name).sortBy(_._1.cost).foldMap { case (card, count) => cardHtml(card.cardCode, count) }
-    val imageHtml = html(cards)
-    IO {
-      val tempHtmlFile = Files.createTempFile("deck", ".html")
-      val path         = Files.write(tempHtmlFile, imageHtml.getBytes(StandardCharsets.UTF_8))
-      val tempPngFile  = Files.createTempFile("deck", ".png")
-      s"wkhtmltoimage --width 412 file://${path.toAbsolutePath()} ${tempPngFile.toAbsolutePath()}" ! ProcessLogger(_ => ())
-      tempHtmlFile.toFile().delete()
-      tempPngFile
-    }
+    val imageHtml = html(cards).filterNot(_ === '\n')
+    Resource.make(IO {
+      val tempPngFile = Files.createTempFile("deck", ".png")
+      (s"""echo "$imageHtml"""" #| s"wkhtmltoimage --width 412 - ${tempPngFile.toAbsolutePath()}") !! ProcessLogger(_ => ())
+      tempPngFile.toFile()
+    })(file => IO(file.delete()).void)
   }
 
   private def html(cardsHtml: String) = s"""

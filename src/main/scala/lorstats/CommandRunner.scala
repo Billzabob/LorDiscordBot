@@ -27,12 +27,11 @@ class CommandRunner(client: DiscordClient, cardList: NonEmptyList[Card], blocker
       case Successful(deck) =>
         val deckWithMetadata = deck.cards.map { case (card, count) => cardList.find(_.cardCode == card.code).get -> count }
         // TODO: Add template while deck is rendering since it can take a few seconds
-        DeckRenderer.renderDeck(deckWithMetadata).flatMap { path =>
-          val file = path.toFile()
-          client.sendFile(file, channelId, blocker) *> IO(file.delete()).void
+        DeckRenderer.renderDeck(deckWithMetadata).use { file =>
+          client.sendFile(file, channelId, blocker).void
         }
       case Failure(_) =>
-        client.sendMessage("That's not a valid deck code you dummy", channelId).void
+        client.sendMessage(s"`$deckCode` is not a valid deck code you dummy", channelId).void
     }
 
   private def compareStrings(str1: String, str2: String): Double = jaroWinkler(str1, str2)
