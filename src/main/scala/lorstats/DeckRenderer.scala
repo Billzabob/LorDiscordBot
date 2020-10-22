@@ -12,7 +12,7 @@ object DeckRenderer {
     val cards     = deck.toList.sortBy(_._1.name).sortBy(_._1.cost).foldMap { case (card, count) => cardHtml(card.cardCode, count) }
     val imageHtml = html(cards).filterNot(_ === '\n')
     Resource.make(IO {
-      val tempPngFile = Files.createTempFile("deck", ".png")
+      val tempPngFile = Files.createTempFile("deck", ".jpeg")
       (s"""echo "$imageHtml"""" #| s"wkhtmltoimage --width 412 - ${tempPngFile.toAbsolutePath()}") !! ProcessLogger(_ => ())
       tempPngFile.toFile()
     })(file => IO(file.delete()).void)

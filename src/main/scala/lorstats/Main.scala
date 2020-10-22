@@ -45,7 +45,7 @@ object Main extends IOApp {
         lorClient.getCards.flatMap { cards =>
           val commandRunner = new CommandRunner(discord.client, cards, blocker)
           Stream(
-            eventsStream.evalMap(handleEvents(commandRunner)).drain,
+            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(commandRunner)).drain,
             repeatWithDelay(report, 2.minutes).drain
           ).parJoinUnbounded.compile.drain
         }

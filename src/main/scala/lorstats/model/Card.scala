@@ -14,6 +14,7 @@ case class Card(
     associatedCards: List[Json],
     assets: NonEmptyList[Asset],
     region: String,
+    regionRef: String,
     attack: Int,
     cost: Int,
     health: Int,
