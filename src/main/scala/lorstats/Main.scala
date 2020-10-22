@@ -3,12 +3,8 @@ package lorstats
 import cats.effect._
 import cats.syntax.all._
 import dissonance._
-// TODO: Combine all model stuff into one import in dissonance for easier usability
-import dissonance.model.Event
-import dissonance.model.Event.MessageCreate
-import dissonance.model.embed.Embed
-import dissonance.model.intents.Intent
-import dissonance.model.message.BasicMessage
+import dissonance.data._
+import dissonance.data.events._
 import fs2.Stream
 import lorstats.DB
 import lorstats.DB._
@@ -17,7 +13,6 @@ import lorstats.model._
 import org.http4s.client.Client
 import org.http4s.client.middleware.{Retry, RetryPolicy}
 import scala.concurrent.duration._
-import dissonance.model.embed.Field
 
 object Main extends IOApp {
 
@@ -29,7 +24,7 @@ object Main extends IOApp {
     (Discord.make(discordToken), pool, Blocker[IO]).tupled
       .use { case (discord, pool, blocker) =>
         val db           = new DB(pool)
-        val eventsStream = discord.subscribe(Intent.GuildMessages).mask.repeat
+        val eventsStream = discord.subscribe(Shard.singleton, Intent.GuildMessages)
         val lorClient    = new LorApiClient(withRetry(discord.httpClient), riotToken)
 
         val newMatches = db

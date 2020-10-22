@@ -4,8 +4,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import cats.effect.{Blocker, IO}
 import dissonance.DiscordClient
-import dissonance.model._
-import dissonance.model.embed._
+import dissonance.data._
 import fordeckmacia.Deck
 import lorstats.model.Card
 import org.apache.commons.text.similarity.JaroWinklerDistance
