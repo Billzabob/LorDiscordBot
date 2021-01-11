@@ -30,7 +30,7 @@ object DB {
       host = "localhost",
       port = 5432,
       user = "nhallstrom",
-      database = "public",
+      database = "LoR",
       password = None,
       max = 10
     )

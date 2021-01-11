@@ -10,8 +10,8 @@ object Dependencies {
     val skunk       = "0.0.21"
     val slf4j       = "1.7.30"
     val http4s      = "0.21.7"
-    val deckmacia   = "1.0.4"
-    val dissonance  = "0.0.6"
+    val deckmacia   = "1.0.5"
+    val dissonance  = "0.0.6+7-d6a90e0c+20201106-1624-SNAPSHOT"
     val catsEffect  = "2.2.0"
     val commonsText = "1.9"
   }

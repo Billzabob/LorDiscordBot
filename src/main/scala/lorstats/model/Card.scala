@@ -12,6 +12,7 @@ import io.circe.Json
 // TODO: Enums
 case class Card(
     associatedCards: List[Json],
+    associatedCardRefs: List[String],
     assets: NonEmptyList[Asset],
     region: String,
     regionRef: String,

@@ -13,10 +13,15 @@ import org.http4s.implicits._
 class LorApiClient(client: Client[IO], riotToken: String) extends CirceEntityDecoder {
   def getGameInfo: LatestMatch => IO[GameInfo] = { case LatestMatch(puuid, lastMatchId) =>
     for {
-      game    <- riotApiRequest[Match](s"lor/match/v1/matches/$lastMatchId")
-      account <- riotApiRequest[Account](s"riot/account/v1/accounts/by-puuid/$puuid")
-    } yield GameInfo(account, game)
+      game            <- riotApiRequest[Match](s"lor/match/v1/matches/$lastMatchId")
+      account         <- getAccount(puuid)
+      opponent         = game.info.players.find(_.puuid != puuid)
+      opponentAccount <- opponent.traverse(p => getAccount(p.puuid))
+    } yield GameInfo(account, opponentAccount, game)
   }
+
+  def getAccount(puuid: String) =
+    riotApiRequest[Account](s"riot/account/v1/accounts/by-puuid/$puuid")
 
   def getMatches(puuid: String) =
     riotApiRequest[List[String]](s"lor/match/v1/matches/by-puuid/$puuid/ids")
@@ -40,5 +45,5 @@ class LorApiClient(client: Client[IO], riotToken: String) extends CirceEntityDec
 }
 
 object LorApiClient {
-  case class GameInfo(account: Account, game: Match)
+  case class GameInfo(account: Account, opponent: Option[Account], game: Match)
 }
