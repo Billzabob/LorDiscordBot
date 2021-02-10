@@ -4,13 +4,13 @@ object Dependencies {
 
   object Versions {
     val fs2         = "2.3.0"
-    val atto        = "0.7.0"
-    val cats        = "2.2.0"
+    val atto        = "0.9.1"
+    val cats        = "2.4.1"
     val circe       = "0.13.0"
-    val skunk       = "0.0.21"
+    val skunk       = "0.0.23"
     val slf4j       = "1.7.30"
     val http4s      = "0.21.7"
-    val deckmacia   = "1.0.5"
+    val deckmacia   = "1.0.7"
     val dissonance  = "0.0.6+7-d6a90e0c+20201106-1624-SNAPSHOT"
     val catsEffect  = "2.2.0"
     val commonsText = "1.9"
