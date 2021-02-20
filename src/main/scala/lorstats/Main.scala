@@ -26,11 +26,10 @@ object Main extends IOApp {
 
         lorClient.getCards.flatMap { case (cards) =>
           val cardSearcher     = new CardSearcher(cards)
-          val cardLookup       = new CardLookup(discord.client, cards, cardSearcher, blocker)
-          val deckLookup       = new DeckLookup(discord.client, cards, blocker)
+          val cardLookup       = new CardLookup(discord.client, cardSearcher)
           val gameplayNotifier = new GameplayNotifier(riotToken, discord, pool, cards, blocker)
           Stream(
-            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup, deckLookup)).handleError(e => println(e)).repeat.drain,
+            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup)).handleError(e => println(e)).repeat.drain,
             gameplayNotifier.notifyNewGames.handleError(e => println(e)).repeat
           ).parJoinUnbounded.compile.drain
         }
@@ -38,11 +37,10 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def handleEvents(cardLookup: CardLookup, deckLookup: DeckLookup): Event => IO[Unit] = {
+  def handleEvents(cardLookup: CardLookup): Event => IO[Unit] = {
     case MessageCreate(BasicMessage(_, content, _, channelId)) =>
       CommandParser.parseCardsAndDecks(content).traverse_ {
-        case Card(name, associated, levelUp) => cardLookup.card(name, associated, levelUp, channelId)
-        case Deck(code)                      => deckLookup.deck(code, channelId)
+        case Card(name) => cardLookup.card(name, channelId)
       }
     case _ => IO.unit
   }
