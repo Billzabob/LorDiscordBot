@@ -32,6 +32,7 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
       case "PiltoverZaun" => "icon-piltoverzaun.png".some
       case "ShadowIsles"  => "icon-shadowisles.png".some
       case "Targon"       => "icon-targon.png".some
+      case "Shurima"      => "icon-shurima.png".some
       case _              => None
     }
     icon.map(uri"https://dd.b.pvp.net/latest/core/en_us/img/regions".addPath)
