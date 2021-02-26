@@ -12,13 +12,11 @@ import scala.concurrent.duration._
 
 class GameplayNotifier(riotToken: String, discord: Discord, pool: DB.ConnectionPool, cards: NonEmptyList[Card], blocker: Blocker)(implicit
     c: Concurrent[IO],
-    t: Timer[IO],
-    cs: ContextShift[IO]
+    t: Timer[IO]
 ) {
   private val db             = new DB(pool)
   private val lorClient      = new LorApiClient(discord.httpClient, riotToken)
   private val memesChannelId = 609120979989299210L
-  private val testChannel    = 689701123967156423L
   private val matchRenderer  = new MatchRenderer(cards)
   private val gamesToNotify  = List("Ranked", "Normal", "StandardGauntlet")
 
@@ -40,7 +38,11 @@ class GameplayNotifier(riotToken: String, discord: Discord, pool: DB.ConnectionP
 
   private def formatMatch(game: GameInfo) = {
     val player    = game.game.info.players.find(_.puuid == game.account.puuid).getOrElse(throw new Exception(s"Couldn't find player"))
-    val winOrLose = if (player.gameOutcome == "win") "WON" else "LOST"
+    val (winOrLose, color) = player.gameOutcome match {
+      case "win" => "WON" -> Color.green
+      case "loss" => "LOST" -> Color.red
+      case "tie" => "TIED" -> Color.blue
+    }
     val ranked    = if (game.game.info.gameType == "Ranked") "ranked " else ""
     val opponent  = game.game.info.players.find(_.puuid != game.account.puuid)
 
@@ -52,10 +54,10 @@ class GameplayNotifier(riotToken: String, discord: Discord, pool: DB.ConnectionP
           .map(op => "\n[" + game.opponent.get.gameName + "'s Deck](https://lor.mobalytics.gg/decks/code/" + op.deckCode + ")")
           .orEmpty
       )
-      .withColor(if (player.gameOutcome == "win") Color.green else Color.red)
+      .withColor(color)
 
     matchRenderer.renderMatch(game).use { file =>
-      List(testChannel, memesChannelId).parTraverse(channel => discord.client.sendEmbedWithFileImage(embed, file, channel, blocker)).void
+      discord.client.sendEmbedWithFileImage(embed, file, memesChannelId, blocker).void
     }
   }
 
