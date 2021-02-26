@@ -1,5 +1,6 @@
 package lorstats
 
+import cats.data.NonEmptyList
 import cats.effect._
 import cats.syntax.all._
 import dissonance._
@@ -10,6 +11,7 @@ import lorstats.CommandParser._
 import org.http4s.client.Client
 import org.http4s.client.middleware.{Retry, RetryPolicy}
 import scala.concurrent.duration._
+import scala.util.Random
 
 object Main extends IOApp {
 
@@ -28,8 +30,9 @@ object Main extends IOApp {
           val cardSearcher     = new CardSearcher(cards)
           val cardLookup       = new CardLookup(discord.client, cardSearcher)
           val gameplayNotifier = new GameplayNotifier(riotToken, discord, pool, cards, blocker)
+          val image = new ImageStuff(discord.client, blocker)
           Stream(
-            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup)).handleError(e => println(e)).repeat.drain,
+            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup, cards, image)).handleError(e => println(e)).repeat.drain,
             gameplayNotifier.notifyNewGames.handleError(e => println(e)).repeat
           ).parJoinUnbounded.compile.drain
         }
@@ -37,7 +40,7 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def handleEvents(cardLookup: CardLookup): Event => IO[Unit] = {
+  def handleEvents(cardLookup: CardLookup, cards: NonEmptyList[model.Card], image: ImageStuff): Event => IO[Unit] = {
     case MessageCreate(BasicMessage(_, content, _, channelId)) =>
       CommandParser.parseCardsAndDecks(content).traverse_ { case Card(name) =>
         cardLookup.card(name, channelId)
@@ -51,6 +54,9 @@ object Main extends IOApp {
         case None =>
           IO.unit
       }
+    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "quiz", _), _, channel, _, token, _) =>
+      val i = Random.between(0, cards.size)
+      image.sendQuizCard(cards.toList(i), channel, id, token)
     case _ => IO.unit
   }
 
