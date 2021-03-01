@@ -27,7 +27,7 @@ object Dependencies {
     val skunk       = "org.tpolecat" %% "skunk-core" % Versions.skunk
     val slf4j       = "org.slf4j" % "slf4j-nop" % Versions.slf4j
     val http4s      = "org.http4s" %% "http4s-circe" % Versions.http4s
-    val scrimage    = Seq("com.sksamuel.scrimage" % "scrimage-core", "com.sksamuel.scrimage" %% "scrimage-scala").map(_ % Versions.scrimage)
+    val scrimage    = Seq("com.sksamuel.scrimage" % "scrimage-core", "com.sksamuel.scrimage" %% "scrimage-scala").map(_ % Versions.scrimage exclude("ch.qos.logback", "*"))
     val deckmacia   = "com.github.billzabob" %% "fordeckmacia" % Versions.deckmacia
     val dissonance  = "com.github.billzabob" %% "dissonance" % Versions.dissonance
     val catsEffect  = "org.typelevel" %% "cats-effect" % Versions.catsEffect

@@ -25,14 +25,15 @@ class DB(pool: ConnectionPool) {
 object DB {
   type ConnectionPool = Resource[IO, Session[IO]]
 
-  def pool(implicit c: Concurrent[IO], cs: ContextShift[IO]): Resource[IO, ConnectionPool] =
+  def pool(host: String, password: String)(implicit c: Concurrent[IO], cs: ContextShift[IO]): Resource[IO, ConnectionPool] =
     Session.pooled(
-      host = "localhost",
-      port = 5432,
-      user = "nhallstrom",
+      host = host,
+      port = 25060,
+      user = "doadmin",
       database = "LoR",
-      password = None,
-      max = 10
+      password = Some(password),
+      max = 10,
+      ssl = SSL.Trusted
     )
 
   val getLatestMatchesQuery =

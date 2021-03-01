@@ -19,7 +19,9 @@ object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val discordToken = args(0)
     val riotToken    = args(1)
-    (Discord.make(discordToken), DB.pool, Blocker[IO]).tupled
+    val dbHost       = args(2)
+    val dbPassword   = args(3)
+    (Discord.make(discordToken), DB.pool(dbHost, dbPassword), Blocker[IO]).tupled
       .use { case (d, pool, blocker) =>
         val discord      = d.addMiddleware(withRetry)
         val eventsStream = discord.subscribe(Shard.singleton, Intent.GuildMessages)

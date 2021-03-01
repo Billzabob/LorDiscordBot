@@ -17,5 +17,5 @@ class Quizer(image: ImageStuff, cards: NonEmptyList[Card], client: DiscordClient
       }
   }
 
-  private val cardsWithoutChampSpells = cards.filterNot(c => c.supertype == "Champion" && c.`type` == "Spell")
+  private val cardsWithoutChampSpells = cards.filterNot(c => c.supertype == "Champion" && c.`type` == "Spell").filterNot(_.keywords.contains("Skill"))
 }
