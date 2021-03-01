@@ -37,14 +37,14 @@ class GameplayNotifier(riotToken: String, discord: Discord, pool: DB.ConnectionP
   }
 
   private def formatMatch(game: GameInfo) = {
-    val player    = game.game.info.players.find(_.puuid == game.account.puuid).getOrElse(throw new Exception(s"Couldn't find player"))
+    val player = game.game.info.players.find(_.puuid == game.account.puuid).getOrElse(throw new Exception(s"Couldn't find player"))
     val (winOrLose, color) = player.gameOutcome match {
-      case "win" => "WON" -> Color.green
+      case "win"  => "WON"  -> Color.green
       case "loss" => "LOST" -> Color.red
-      case "tie" => "TIED" -> Color.blue
+      case "tie"  => "TIED" -> Color.blue
     }
-    val ranked    = if (game.game.info.gameType == "Ranked") "ranked " else ""
-    val opponent  = game.game.info.players.find(_.puuid != game.account.puuid)
+    val ranked   = if (game.game.info.gameType == "Ranked") "ranked " else ""
+    val opponent = game.game.info.players.find(_.puuid != game.account.puuid)
 
     val embed = Embed.make
       .withTitle(s"${game.account.gameName} $winOrLose a ${ranked}LoR match!")

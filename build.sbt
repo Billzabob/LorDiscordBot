@@ -10,7 +10,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "lorstats",
     libraryDependencies ++= dependencies,
-    scalacOptions += "-Ymacro-annotations"
+    scalacOptions += "-Ymacro-annotations",
+    testFrameworks += new TestFramework("munit.Framework")
   )
 
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")

@@ -1,6 +1,5 @@
 package lorstats
 
-import cats.data.NonEmptyList
 import cats.effect._
 import cats.syntax.all._
 import dissonance._
@@ -26,13 +25,14 @@ object Main extends IOApp {
         val eventsStream = discord.subscribe(Shard.singleton, Intent.GuildMessages)
         val lorClient    = new LorApiClient(discord.httpClient, riotToken)
 
-        lorClient.getCards.flatMap { case (cards) =>
+        (lorClient.getCards, IO(Random)).tupled.flatMap { case (cards, random) =>
           val cardSearcher     = new CardSearcher(cards)
           val cardLookup       = new CardLookup(discord.client, cardSearcher)
           val gameplayNotifier = new GameplayNotifier(riotToken, discord, pool, cards, blocker)
-          val image = new ImageStuff(discord.client, blocker)
+          val image            = new ImageStuff(discord.httpClient)
+          val quizer           = new Quizer(image, cards, discord.client, blocker, random)
           Stream(
-            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup, cards, image)).handleError(e => println(e)).repeat.drain,
+            eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup, quizer)).handleError(e => println(e)).repeat.drain,
             gameplayNotifier.notifyNewGames.handleError(e => println(e)).repeat
           ).parJoinUnbounded.compile.drain
         }
@@ -40,7 +40,7 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def handleEvents(cardLookup: CardLookup, cards: NonEmptyList[model.Card], image: ImageStuff): Event => IO[Unit] = {
+  def handleEvents(cardLookup: CardLookup, quizer: Quizer): Event => IO[Unit] = {
     case MessageCreate(BasicMessage(_, content, _, channelId)) =>
       CommandParser.parseCardsAndDecks(content).traverse_ { case Card(name) =>
         cardLookup.card(name, channelId)
@@ -55,8 +55,7 @@ object Main extends IOApp {
           IO.unit
       }
     case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "quiz", _), _, channel, _, token, _) =>
-      val i = Random.between(0, cards.size)
-      image.sendQuizCard(cards.toList(i), channel, id, token)
+      quizer.sendQuiz(channel, id, token)
     case _ => IO.unit
   }
 
