@@ -10,37 +10,63 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import org.http4s.Uri
 import scala.util.Random
 import scala.concurrent.duration._
+import skunk.SqlState
 
 class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, db: DB)(implicit t: Timer[IO]) {
-  def sendQuiz(channel: Snowflake, id: Snowflake, token: String): IO[Unit] = for {
-    card <- IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList)
-    _ <- client.sendInteractionResponse(
-           InteractionResponse(
-             InteractionResponseType.ChannelMessageWithSource,
-             Some(
-               InteractionApplicationCommandCallbackData(
-                 None,
-                 "",
-                 Some(
-                   List(
-                     Embed.make
-                       .withTitle("Guess the name using /answer")
-                       .withDescription("You have 30 seconds!")
-                       .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz-cards.sfo3.digitaloceanspaces.com/${card.cardCode}.png")), None, Some(1024), Some(680)))
-                   )
-                 ),
-                 None
+  def sendQuiz(channel: Snowflake, id: Snowflake, token: String): IO[Unit] = {
+    val quiz = for {
+      card <- IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList)
+      _    <- db.setCardQuizForChannel(Quiz(channel, card.name))
+      _ <- client.sendInteractionResponse(
+             InteractionResponse(
+               InteractionResponseType.ChannelMessageWithSource,
+               Some(
+                 InteractionApplicationCommandCallbackData(
+                   None,
+                   "",
+                   Some(
+                     List(
+                       Embed.make
+                         .withTitle("Guess the name using /answer")
+                         .withDescription("You have 30 seconds!")
+                         .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz-cards.sfo3.digitaloceanspaces.com/${card.cardCode}.png")), None, Some(1024), Some(680)))
+                     )
+                   ),
+                   None
+                 )
                )
-             )
-           ),
-           id,
-           token
-         )
-    _ <- db.setCardQuizForChannel(Quiz(channel, card.name))
-    _ <- IO.sleep(30.seconds)
-    _ <- reportAnswer(channel, card.name)
-    _ <- db.clearQuiz(channel)
-  } yield ()
+             ),
+             id,
+             token
+           )
+      _ <- IO.sleep(30.seconds)
+      _ <- reportAnswer(channel, card.name)
+      _ <- db.clearQuiz(channel)
+    } yield ()
+
+    quiz.recoverWith { case SqlState.UniqueViolation(_) =>
+      client.sendInteractionResponse(
+        InteractionResponse(
+          InteractionResponseType.ChannelMessageWithSource,
+          Some(
+            InteractionApplicationCommandCallbackData(
+              None,
+              "",
+              Some(
+                List(
+                  Embed.make
+                    .withTitle("There is already a quiz in progress!")
+                )
+              ),
+              None
+            )
+          )
+        ),
+        id,
+        token
+      )
+    }
+  }
 
   def checkAnswer(channel: Snowflake, user: Snowflake, id: Snowflake, token: String, answer: String): IO[Unit] = {
     db.currentQuizCard(channel).flatMap { card =>
@@ -66,7 +92,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
             Some(InteractionApplicationCommandCallbackData(None, "There is no quiz active, start one with **/quiz**", None, None))
           )
       }
-      client.sendInteractionResponse(response, id, token) >> db.addGuessForPlayer(Guess(channel, user, answer))
+      client.sendInteractionResponse(response, id, token) >> db.addGuessForPlayer(Guess(channel, user, answer.take(32)))
     }
   }
 

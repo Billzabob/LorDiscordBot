@@ -90,8 +90,6 @@ object DB {
     sql"""
       INSERT INTO quizzes (channel, card_name)
       VALUES ($int8, $cardNameCodec)
-      ON CONFLICT (channel)
-      DO UPDATE SET card_name = EXCLUDED.card_name
     """.command.contramap[Quiz](q => q.channel ~ q.cardName)
 
   val addGuessForPlayerCommand =
