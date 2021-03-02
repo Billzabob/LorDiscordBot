@@ -7,7 +7,6 @@ import skunk.codec.all._
 case class Quiz(channel: Snowflake, cardName: String)
 
 object Quiz {
-  val channelCodec: Codec[Long] = int8
   val cardNameCodec: Codec[String] = varchar(32)
-  val quizCodec: Codec[Quiz] = (channelCodec ~ cardNameCodec).gimap[Quiz]
+  val quizCodec: Codec[Quiz]       = (int8 ~ cardNameCodec).gimap[Quiz]
 }

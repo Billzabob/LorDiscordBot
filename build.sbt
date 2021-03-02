@@ -16,5 +16,3 @@ lazy val root = (project in file("."))
 
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
-
-fork in run := true

@@ -1,25 +1,46 @@
 package lorstats
 
 import cats.data.NonEmptyList
-import cats.effect.{Blocker, IO, Timer}
+import cats.effect.{IO, Timer}
 import cats.syntax.all._
 import dissonance.data._
 import dissonance.DiscordClient
-import lorstats.model.{Card, Quiz}
+import lorstats.model.{Card, Guess, Quiz}
+import org.apache.commons.text.similarity.LevenshteinDistance
+import org.http4s.Uri
 import scala.util.Random
 import scala.concurrent.duration._
 
-class Quizer(image: ImageStuff, cards: NonEmptyList[Card], client: DiscordClient, blocker: Blocker, random: Random, db: DB)(implicit t: Timer[IO]) {
-  def sendQuiz(channel: Snowflake, id: Snowflake, token: String): IO[Unit] = {
-    client.sendInteractionResponse(InteractionResponse(InteractionResponseType.AcknowledgeWithSource, None), id, token) >>
-      IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList).flatMap { card =>
-        db.setCardQuizForChannel(Quiz(channel, card.name)) >>
-          image.cardImageWithNameHidden(card).use(image => client.sendFile(image, channel, blocker)) >>
-          client.sendMessage("You have 30 seconds to guess the name using **/answer**", channel) >>
-          IO.sleep(30.seconds) >>
-          client.sendMessage(s"The answer was: **${card.name}**", channel).void
-      }
-  }
+class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, db: DB)(implicit t: Timer[IO]) {
+  def sendQuiz(channel: Snowflake, id: Snowflake, token: String): IO[Unit] = for {
+    card <- IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList)
+    _ <- client.sendInteractionResponse(
+           InteractionResponse(
+             InteractionResponseType.ChannelMessageWithSource,
+             Some(
+               InteractionApplicationCommandCallbackData(
+                 None,
+                 "",
+                 Some(
+                   List(
+                     Embed.make
+                       .withTitle("Guess the name using /answer")
+                       .withDescription("You have 30 seconds!")
+                       .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz-cards.sfo3.digitaloceanspaces.com/${card.cardCode}.png")), None, Some(1024), Some(680)))
+                   )
+                 ),
+                 None
+               )
+             )
+           ),
+           id,
+           token
+         )
+    _ <- db.setCardQuizForChannel(Quiz(channel, card.name))
+    _ <- IO.sleep(30.seconds)
+    _ <- reportAnswer(channel, card.name)
+    _ <- db.clearQuiz(channel)
+  } yield ()
 
   def checkAnswer(channel: Snowflake, user: Snowflake, id: Snowflake, token: String, answer: String): IO[Unit] = {
     db.currentQuizCard(channel).flatMap { card =>
@@ -27,22 +48,47 @@ class Quizer(image: ImageStuff, cards: NonEmptyList[Card], client: DiscordClient
         case Some(cardName) if cardName.toLowerCase == answer.toLowerCase =>
           InteractionResponse(
             InteractionResponseType.ChannelMessage,
-            Some(InteractionApplicationCommandCallbackData(None, s"<@$user> guessed RIGHT ✅", None, None))
+            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> guessed RIGHT").withColor(Color.green))), None))
+          )
+        case Some(cardName) if compareStrings(cardName, answer) < 2 =>
+          InteractionResponse(
+            InteractionResponseType.ChannelMessage,
+            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> was close!").withColor(Color.blue))), None))
           )
         case Some(_) =>
           InteractionResponse(
             InteractionResponseType.ChannelMessage,
-            Some(InteractionApplicationCommandCallbackData(None, s"<@$user> guessed WRONG ❌", None, None))
+            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> guessed WRONG").withColor(Color.red))), None))
           )
         case None =>
           InteractionResponse(
             InteractionResponseType.ChannelMessageWithSource,
-            Some(InteractionApplicationCommandCallbackData(None, "There is no quiz active", None, None))
+            Some(InteractionApplicationCommandCallbackData(None, "There is no quiz active, start one with **/quiz**", None, None))
           )
       }
-      client.sendInteractionResponse(response, id, token)
+      client.sendInteractionResponse(response, id, token) >> db.addGuessForPlayer(Guess(channel, user, answer))
     }
   }
 
+  private def reportAnswer(channel: Snowflake, answer: String): IO[Unit] = for {
+    guesses <- db.getGuessesForChannel(channel).compile.toList
+    e        = Embed.make.withTitle(s"The answer was: $answer")
+    _ <- if (guesses.isEmpty)
+           client.sendEmbed(e.withDescription("There were no guesses"), channel)
+         else {
+           val fields = guesses
+             .groupBy(_.user)
+             .map { case (user, guesses) =>
+               s"<@$user>: " + guesses.map(_.answer).mkString(", ")
+             }
+             .toList
+           val embed = e.withDescription(fields.mkString("\n"))
+           client.sendEmbed(embed, channel)
+         }
+  } yield ()
+
   private val cardsWithoutChampSpells = cards.filterNot(c => c.supertype == "Champion" && c.`type` == "Spell").filterNot(_.keywords.contains("Skill"))
+
+  private val levenshtein                                     = new LevenshteinDistance()
+  private def compareStrings(str1: String, str2: String): Int = levenshtein(str1.toLowerCase, str2.toLowerCase)
 }

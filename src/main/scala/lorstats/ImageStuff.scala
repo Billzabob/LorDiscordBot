@@ -13,9 +13,11 @@ import org.http4s.client.middleware.FollowRedirect
 import org.http4s.Request
 
 class ImageStuff(client: Client[IO])(implicit cs: ContextShift[IO]) {
-  def cardImageWithNameHidden(card: Card): Resource[IO, File] = {
+  def cardImageWithNameHidden(card: Card, output: String): Resource[IO, File] = {
     val request = clientWithRedirect.stream(Request(uri = card.assets.head.gameAbsolutePath)).flatMap(_.body)
     fs2.io.toInputStreamResource(request).flatMap { bytes =>
+      println(card.assets.head.gameAbsolutePath.renderString)
+      println(card.name)
       val image = ImmutableImage.loader().fromStream(bytes)
       val rows  = image.rows
       val nameCoordinates = for {
@@ -34,7 +36,7 @@ class ImageStuff(client: Client[IO])(implicit cs: ContextShift[IO]) {
             else
               p.toColor
           }
-          val tempFile = Resource.make(IO(Files.createTempFile("quiz", ".png").toFile))(file => IO(file.delete).void)
+          val tempFile = Resource.liftF(IO(Files.createFile(Paths.get(output + ".png")).toFile))
           tempFile.evalTap(file => IO(result.output(file)))
         case None =>
           Resource.liftF(IO.raiseError(new Exception("Could not find card name in card image")))

@@ -4,11 +4,13 @@ import cats.effect._
 import dissonance.data.Snowflake
 import fs2.Stream
 import lorstats.DB._
-import lorstats.model.{LatestMatch, Quiz}
+import lorstats.model.{Guess, LatestMatch, Quiz}
+import lorstats.model.Guess._
 import lorstats.model.LatestMatch._
 import lorstats.model.Quiz._
 import natchez.Trace.Implicits.noop
 import skunk._
+import skunk.codec.all._
 import skunk.implicits._
 
 class DB(pool: ConnectionPool) {
@@ -20,6 +22,13 @@ class DB(pool: ConnectionPool) {
       m <- q.stream(Void, chunkSize)
     } yield m
 
+  def getGuessesForChannel(channel: Snowflake): Stream[IO, Guess] =
+    for {
+      p <- Stream.resource(pool)
+      q <- Stream.resource(p.prepare(getGuessesForChannelQuery))
+      g <- q.stream(channel, 10)
+    } yield g
+
   def setLatestMatch(latestMatch: LatestMatch): IO[Unit] =
     pool.flatMap(_.prepare(setLatestMatchCommand)).use(_.execute(latestMatch)).void
 
@@ -28,6 +37,12 @@ class DB(pool: ConnectionPool) {
 
   def currentQuizCard(channel: Snowflake): IO[Option[String]] =
     pool.flatMap(_.prepare(getCurrentQuizCardQuery)).use(_.option(channel))
+
+  def addGuessForPlayer(guess: Guess): IO[Unit] =
+    pool.flatMap(_.prepare(addGuessForPlayerCommand)).use(_.execute(guess)).void
+
+  def clearQuiz(channel: Snowflake): IO[Unit] =
+    pool.flatMap(_.prepare(clearQuizCommand)).use(_.execute(channel)).void
 }
 
 object DB {
@@ -54,8 +69,15 @@ object DB {
     sql"""
       SELECT card_name
       FROM quizzes
-      WHERE channel = $channelCodec
+      WHERE channel = $int8
     """.query(cardNameCodec)
+
+  val getGuessesForChannelQuery =
+    sql"""
+      SELECT channel, user_id, answer
+      FROM guesses, quizzes
+      WHERE channel = $int8
+    """.query(guessCodec)
 
   val setLatestMatchCommand =
     sql"""
@@ -67,8 +89,22 @@ object DB {
   val setCardQuizForChannelCommand =
     sql"""
       INSERT INTO quizzes (channel, card_name)
-      VALUES ($channelCodec, $cardNameCodec)
+      VALUES ($int8, $cardNameCodec)
       ON CONFLICT (channel)
       DO UPDATE SET card_name = EXCLUDED.card_name
     """.command.contramap[Quiz](q => q.channel ~ q.cardName)
+
+  val addGuessForPlayerCommand =
+    sql"""
+      INSERT INTO guesses (quiz, user_id, answer)
+      SELECT id, $int8, $answerCodec
+      FROM quizzes
+      WHERE channel = $int8
+    """.command.contramap[Guess](g => g.user ~ g.answer ~ g.channel)
+
+  val clearQuizCommand =
+    sql"""
+      DELETE FROM quizzes
+      WHERE channel = $int8
+    """.command
 }
