@@ -1,10 +1,12 @@
 package lorstats
 
 import cats.effect._
+import dissonance.data.Snowflake
 import fs2.Stream
 import lorstats.DB._
-import lorstats.model.LatestMatch
+import lorstats.model.{LatestMatch, Quiz}
 import lorstats.model.LatestMatch._
+import lorstats.model.Quiz._
 import natchez.Trace.Implicits.noop
 import skunk._
 import skunk.implicits._
@@ -20,6 +22,12 @@ class DB(pool: ConnectionPool) {
 
   def setLatestMatch(latestMatch: LatestMatch): IO[Unit] =
     pool.flatMap(_.prepare(setLatestMatchCommand)).use(_.execute(latestMatch)).void
+
+  def setCardQuizForChannel(quiz: Quiz): IO[Unit] =
+    pool.flatMap(_.prepare(setCardQuizForChannelCommand)).use(_.execute(quiz)).void
+
+  def currentQuizCard(channel: Snowflake): IO[Option[String]] =
+    pool.flatMap(_.prepare(getCurrentQuizCardQuery)).use(_.option(channel))
 }
 
 object DB {
@@ -42,10 +50,25 @@ object DB {
       FROM players
     """.query(latestMatchCodec)
 
+  val getCurrentQuizCardQuery =
+    sql"""
+      SELECT card_name
+      FROM quizzes
+      WHERE channel = $channelCodec
+    """.query(cardNameCodec)
+
   val setLatestMatchCommand =
     sql"""
       UPDATE players
       SET last_match = $lastMatchIdCodec
       WHERE puuid = $puuidCodec
     """.command.contramap[LatestMatch](lm => lm.lastMatchId ~ lm.puuid)
+
+  val setCardQuizForChannelCommand =
+    sql"""
+      INSERT INTO quizzes (channel, card_name)
+      VALUES ($channelCodec, $cardNameCodec)
+      ON CONFLICT (channel)
+      DO UPDATE SET card_name = EXCLUDED.card_name
+    """.command.contramap[Quiz](q => q.channel ~ q.cardName)
 }

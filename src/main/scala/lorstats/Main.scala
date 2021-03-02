@@ -28,11 +28,12 @@ object Main extends IOApp {
         val lorClient    = new LorApiClient(discord.httpClient, riotToken)
 
         (lorClient.getCards, IO(Random)).tupled.flatMap { case (cards, random) =>
+          val db               = new DB(pool)
           val cardSearcher     = new CardSearcher(cards)
           val cardLookup       = new CardLookup(discord.client, cardSearcher)
-          val gameplayNotifier = new GameplayNotifier(riotToken, discord, pool, cards, blocker)
+          val gameplayNotifier = new GameplayNotifier(riotToken, discord, db, cards, blocker)
           val image            = new ImageStuff(discord.httpClient)
-          val quizer           = new Quizer(image, cards, discord.client, blocker, random)
+          val quizer           = new Quizer(image, cards, discord.client, blocker, random, db)
           Stream(
             eventsStream.mapAsyncUnordered(Int.MaxValue)(handleEvents(cardLookup, quizer)).handleError(e => println(e)).repeat.drain,
             gameplayNotifier.notifyNewGames.handleError(e => println(e)).repeat
@@ -58,6 +59,10 @@ object Main extends IOApp {
       }
     case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "quiz", _), _, channel, _, token, _) =>
       quizer.sendQuiz(channel, id, token)
+    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "answer", Some(commands)), _, channel, member, token, _) =>
+      val user = member.user.get.id.value
+      val answer = commands.find(_.name == "guess").get.value.get.as[String].toOption.get
+      quizer.checkAnswer(channel, user, id, token, answer)
     case _ => IO.unit
   }
 

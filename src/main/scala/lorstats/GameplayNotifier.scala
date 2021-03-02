@@ -10,11 +10,10 @@ import lorstats.LorApiClient.GameInfo
 import lorstats.model.{Card, LatestMatch}
 import scala.concurrent.duration._
 
-class GameplayNotifier(riotToken: String, discord: Discord, pool: DB.ConnectionPool, cards: NonEmptyList[Card], blocker: Blocker)(implicit
+class GameplayNotifier(riotToken: String, discord: Discord, db: DB, cards: NonEmptyList[Card], blocker: Blocker)(implicit
     c: Concurrent[IO],
     t: Timer[IO]
 ) {
-  private val db             = new DB(pool)
   private val lorClient      = new LorApiClient(discord.httpClient, riotToken)
   private val memesChannelId = 609120979989299210L
   private val matchRenderer  = new MatchRenderer(cards)
