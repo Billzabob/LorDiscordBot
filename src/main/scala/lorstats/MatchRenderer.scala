@@ -125,6 +125,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
     case "faction_ShadowIsles_Name" => "shadowisles"
     case "faction_Noxus_Name"       => "noxus"
     case "faction_Freljord_Name"    => "freljord"
+    case "faction_Shurima_Name"     => "shurima"
     case other                      => throw new Exception(s"Unknown faction: $other")
   }
 }
