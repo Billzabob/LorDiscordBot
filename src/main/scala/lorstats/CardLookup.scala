@@ -12,7 +12,7 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
         client.sendMessage(card.assets.head.gameAbsolutePath.renderString, channelId).void
       case NonEmptyList(card, others) =>
         val cards = (card :: others).map(_.name).distinct.mkString(", ")
-        client.sendMessage(s"Multiple possible matches: $cards", channelId).void
+        client.sendMessage(s"Multiple possible card matches: $cards", channelId).void
     }
   }
 
