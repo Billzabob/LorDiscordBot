@@ -29,7 +29,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
                        Embed.make
                          .withTitle("Guess the name using /answer")
                          .withDescription("You have 30 seconds!")
-                         .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz-cards.sfo3.digitaloceanspaces.com/${card.cardCode}.png")), None, Some(1024), Some(680)))
+                         .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz.sfo3.digitaloceanspaces.com/cards/${card.cardCode}.png")), None, Some(1024), Some(680)))
                      )
                    ),
                    None

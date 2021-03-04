@@ -23,7 +23,7 @@ class ImageStuff(client: Client[IO])(implicit cs: ContextShift[IO]) {
       val nameCoordinates = for {
         startRow <- rows.reverseIterator.drop(140).find(_.exists(_.toColor == RGBColor.fromAwt(Color.WHITE)))
         start    <- startRow.headOption.map(_.y)
-        endRow   <- rows.reverseIterator.drop(image.height - start).find(_.forall(_.toColor != RGBColor.fromAwt(Color.WHITE)))
+        endRow   <- rows.reverseIterator.drop(image.height - start).sliding(17).find(_.forall(_.forall(_.toColor != RGBColor.fromAwt(Color.WHITE)))).map(_.head)
         end      <- endRow.headOption.map(_.y)
       } yield (start, end)
 
