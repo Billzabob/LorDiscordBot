@@ -16,7 +16,7 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
     }
   }
 
-  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String): IO[Unit] = IO(println(s"Retrieving card: $cardName")) *> {
+  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String): IO[Unit] = IO(println(s"Retrieving card by command: $cardName")) *> {
     cardSearcher.searchCard(cardName, champLevel) match {
       case NonEmptyList(card, Nil) =>
         val response = InteractionResponse(

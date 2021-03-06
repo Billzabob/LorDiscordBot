@@ -24,10 +24,8 @@ class GameplayNotifier(riotToken: String, discord: Discord, db: DB, cards: NonEm
       .latestMatches(512)
       .evalMap(getNewerMatch(lorClient))
       .unNone
-      .evalTap(latestMatch => IO(println(s"Latest match: $latestMatch")))
       .evalTap(db.setLatestMatch)
       .evalMap(lorClient.getGameInfo)
-      .evalTap(a => IO(println("Game type: '" + a.game.info.gameType + "'")))
       .filter(a => gamesToNotify.contains(a.game.info.gameType))
 
     val notify = newMatches.evalMap(formatMatch)

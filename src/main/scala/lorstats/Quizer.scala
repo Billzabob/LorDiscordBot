@@ -16,6 +16,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
   def sendQuiz(channel: Snowflake, id: Snowflake, token: String): IO[Unit] = {
     val quiz = for {
       card <- IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList)
+      _ <- IO(println(s"Starting quiz for card: ${card.name}"))
       _    <- db.setCardQuizForChannel(Quiz(channel, card.name))
       _ <- client.sendInteractionResponse(
              InteractionResponse(
@@ -41,10 +42,9 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
            )
       _ <- IO.sleep(30.seconds)
       _ <- reportAnswer(channel, card.name)
-      _ <- db.clearQuiz(channel)
     } yield ()
 
-    quiz.recoverWith { case SqlState.UniqueViolation(_) =>
+    quiz.attempt.flatMap(_ => db.clearQuiz(channel)).recoverWith { case SqlState.UniqueViolation(_) =>
       client.sendInteractionResponse(
         InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,

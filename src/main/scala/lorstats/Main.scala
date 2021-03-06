@@ -61,7 +61,7 @@ object Main extends IOApp {
     case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "answer", Some(commands)), _, channel, member, token, _) =>
       val user   = member.user.get.id.value
       val answer = commands.find(_.name == "guess").get.value.get.as[String].toOption.get
-      quizer.checkAnswer(channel, user, id, token, answer)
+      IO(println(s"Someone guessed: $answer")) >> quizer.checkAnswer(channel, user, id, token, answer)
     case _ => IO.unit
   }
 

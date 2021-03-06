@@ -75,7 +75,7 @@ object DB {
   val getGuessesForChannelQuery =
     sql"""
       SELECT channel, user_id, answer
-      FROM guesses, quizzes
+      FROM quizzes JOIN guesses ON quizzes.id = guesses.quiz
       WHERE channel = $int8
     """.query(guessCodec)
 
