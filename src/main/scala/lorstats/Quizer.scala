@@ -39,9 +39,10 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
              ),
              id,
              token
-           )
-      _ <- IO.sleep(30.seconds)
-      _ <- reportAnswer(channel, card.name)
+           ).attempt
+      _ <- IO.sleep(30.seconds).attempt
+      _ <- reportAnswer(channel, card.name).attempt
+      _ <- db.clearQuiz(channel).attempt
     } yield ()
 
     quiz.recoverWith { case SqlState.UniqueViolation(_) =>
@@ -65,7 +66,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
         id,
         token
       )
-    }.attempt >> db.clearQuiz(channel)
+    }
   }
 
   def checkAnswer(channel: Snowflake, user: Snowflake, id: Snowflake, token: String, answer: String): IO[Unit] = {
