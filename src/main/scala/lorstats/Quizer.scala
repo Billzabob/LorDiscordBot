@@ -44,7 +44,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
       client.sendInteractionResponse(
         InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withTitle("There is already a quiz in progress!")).addFlag(InteractionCallbackFlag.Ephemeral).some
+          InteractionApplicationCommandCallbackData.make.withContent("There is already a quiz in progress!").addFlag(InteractionCallbackFlag.Ephemeral).some
         ),
         id,
         token
