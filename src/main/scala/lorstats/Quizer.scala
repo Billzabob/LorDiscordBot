@@ -43,8 +43,8 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
     quiz.recoverWith { case SqlState.UniqueViolation(_) =>
       client.sendInteractionResponse(
         InteractionResponse(
-          InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withTitle("There is already a quiz in progress!")).addFlag(InteractionCallbackFlag.Ephemeral).some
+          InteractionResponseType.Acknowledge,
+          InteractionApplicationCommandCallbackData.make.withContent("There is already a quiz in progress!").addFlag(InteractionCallbackFlag.Ephemeral).some
         ),
         id,
         token
@@ -72,7 +72,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
           )
         case None =>
           InteractionResponse(
-            InteractionResponseType.ChannelMessageWithSource,
+            InteractionResponseType.Acknowledge,
             InteractionApplicationCommandCallbackData.make.withContent("There is no quiz active, start one with **/quiz**").addFlag(InteractionCallbackFlag.Ephemeral).some
           )
       }
