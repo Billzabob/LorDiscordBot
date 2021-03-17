@@ -2,6 +2,7 @@ package lorstats
 
 import cats.data.NonEmptyList
 import cats.effect.IO
+import cats.syntax.all._
 import dissonance.data._
 import dissonance.DiscordClient
 
@@ -21,28 +22,14 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
       case NonEmptyList(card, Nil) =>
         val response = InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          Some(
-            InteractionApplicationCommandCallbackData(
-              None,
-              card.assets.head.gameAbsolutePath.renderString,
-              None,
-              None
-            )
-          )
+          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
         )
         client.sendInteractionResponse(response, id, token)
       case NonEmptyList(card, others) =>
         val cards = (card :: others).map(_.name).distinct.mkString(", ")
         val response = InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          Some(
-            InteractionApplicationCommandCallbackData(
-              None,
-              s"Multiple possible matches: $cards",
-              None,
-              None
-            )
-          )
+          InteractionApplicationCommandCallbackData.make.withContent(s"Multiple possible matches: $cards").some
         )
         client.sendInteractionResponse(response, id, token)
     }

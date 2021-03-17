@@ -12,8 +12,8 @@ object Dependencies {
     val slf4j       = "1.7.30"
     val http4s      = "0.21.7"
     val scrimage    = "4.0.17"
-    val deckmacia   = "1.0.8+2-4b3fcf8b-SNAPSHOT"
-    val dissonance  = "0.0.6+69-663e79d4-SNAPSHOT"
+    val deckmacia   = "1.0.8"
+    val dissonance  = "0.0.7"
     val catsEffect  = "2.2.0"
     val commonsText = "1.9"
   }

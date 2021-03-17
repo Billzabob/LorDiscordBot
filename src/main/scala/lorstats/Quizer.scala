@@ -18,28 +18,23 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
       card <- IO(random.between(0, cardsWithoutChampSpells.size)).map(cardsWithoutChampSpells.toList)
       _    <- IO(println(s"Starting quiz for card: ${card.name}"))
       _    <- db.setCardQuizForChannel(Quiz(channel, card.name))
-      _ <- client.sendInteractionResponse(
-             InteractionResponse(
-               InteractionResponseType.ChannelMessageWithSource,
-               Some(
-                 InteractionApplicationCommandCallbackData(
-                   None,
-                   "",
-                   Some(
-                     List(
-                       Embed.make
-                         .withTitle("Guess the name using /answer")
-                         .withDescription("You have 30 seconds!")
-                         .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz.sfo3.digitaloceanspaces.com/cards/${card.cardCode}.png")), None, Some(1024), Some(680)))
-                     )
-                   ),
-                   None
-                 )
-               )
-             ),
-             id,
-             token
-           ).attempt
+      _ <- client
+             .sendInteractionResponse(
+               InteractionResponse(
+                 InteractionResponseType.ChannelMessageWithSource,
+                 InteractionApplicationCommandCallbackData.make
+                   .addEmbed(
+                     Embed.make
+                       .withTitle("Guess the name using /answer")
+                       .withDescription("You have 30 seconds!")
+                       .withImage(Image(Some(Uri.unsafeFromString(s"https://lor-quiz.sfo3.digitaloceanspaces.com/cards/${card.cardCode}.png")), None, Some(1024), Some(680)))
+                   )
+                   .some
+               ),
+               id,
+               token
+             )
+             .attempt
       _ <- IO.sleep(30.seconds).attempt
       _ <- reportAnswer(channel, card.name).attempt
       _ <- db.clearQuiz(channel).attempt
@@ -49,19 +44,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
       client.sendInteractionResponse(
         InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          Some(
-            InteractionApplicationCommandCallbackData(
-              None,
-              "",
-              Some(
-                List(
-                  Embed.make
-                    .withTitle("There is already a quiz in progress!")
-                )
-              ),
-              None
-            )
-          )
+          InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withTitle("There is already a quiz in progress!")).addFlag(InteractionCallbackFlag.Ephemeral).some
         ),
         id,
         token
@@ -75,22 +58,22 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
         case Some(cardName) if cardName.toLowerCase == answer.toLowerCase =>
           InteractionResponse(
             InteractionResponseType.ChannelMessage,
-            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> guessed RIGHT").withColor(Color.green))), None))
+            InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> guessed RIGHT").withColor(Color.green)).some
           )
         case Some(cardName) if compareStrings(cardName, answer) < 2 =>
           InteractionResponse(
             InteractionResponseType.ChannelMessage,
-            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> was close!").withColor(Color.blue))), None))
+            InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> was close!").withColor(Color.blue)).some
           )
         case Some(_) =>
           InteractionResponse(
             InteractionResponseType.ChannelMessage,
-            Some(InteractionApplicationCommandCallbackData(None, "", Some(List(Embed.make.withDescription(s"<@$user> guessed WRONG").withColor(Color.red))), None))
+            InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> guessed WRONG").withColor(Color.red)).some
           )
         case None =>
           InteractionResponse(
             InteractionResponseType.ChannelMessageWithSource,
-            Some(InteractionApplicationCommandCallbackData(None, "There is no quiz active, start one with **/quiz**", None, None))
+            InteractionApplicationCommandCallbackData.make.withContent("There is no quiz active, start one with **/quiz**").addFlag(InteractionCallbackFlag.Ephemeral).some
           )
       }
       client.sendInteractionResponse(response, id, token) >> db.addGuessForPlayer(Guess(channel, user, answer.take(32)))
