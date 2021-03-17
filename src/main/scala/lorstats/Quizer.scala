@@ -43,7 +43,7 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
     quiz.recoverWith { case SqlState.UniqueViolation(_) =>
       client.sendInteractionResponse(
         InteractionResponse(
-          InteractionResponseType.Acknowledge,
+          InteractionResponseType.ChannelMessageWithSource,
           InteractionApplicationCommandCallbackData.make.withContent("There is already a quiz in progress!").addFlag(InteractionCallbackFlag.Ephemeral).some
         ),
         id,
@@ -57,22 +57,22 @@ class Quizer(cards: NonEmptyList[Card], client: DiscordClient, random: Random, d
       val response = card match {
         case Some(cardName) if cardName.toLowerCase == answer.toLowerCase =>
           InteractionResponse(
-            InteractionResponseType.ChannelMessage,
+            InteractionResponseType.ChannelMessageWithSource,
             InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> guessed RIGHT").withColor(Color.green)).some
           )
         case Some(cardName) if compareStrings(cardName, answer) < 2 =>
           InteractionResponse(
-            InteractionResponseType.ChannelMessage,
+            InteractionResponseType.ChannelMessageWithSource,
             InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> was close!").withColor(Color.blue)).some
           )
         case Some(_) =>
           InteractionResponse(
-            InteractionResponseType.ChannelMessage,
+            InteractionResponseType.ChannelMessageWithSource,
             InteractionApplicationCommandCallbackData.make.addEmbed(Embed.make.withDescription(s"<@$user> guessed WRONG").withColor(Color.red)).some
           )
         case None =>
           InteractionResponse(
-            InteractionResponseType.Acknowledge,
+            InteractionResponseType.ChannelMessageWithSource,
             InteractionApplicationCommandCallbackData.make.withContent("There is no quiz active, start one with **/quiz**").addFlag(InteractionCallbackFlag.Ephemeral).some
           )
       }
