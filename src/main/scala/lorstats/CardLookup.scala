@@ -17,7 +17,7 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
     }
   }
 
-  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String): IO[Unit] = IO(println(s"Retrieving card by command: $cardName")) *> {
+  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String, channelId: Snowflake): IO[Unit] = IO(println(s"Retrieving card by command: $cardName")) *> {
     cardSearcher.searchCard(cardName, champLevel) match {
       case NonEmptyList(card, Nil) =>
         val response = InteractionResponse(
@@ -26,12 +26,11 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
         )
         client.sendInteractionResponse(response, id, token)
       case NonEmptyList(card, others) =>
-        val cards = (card :: others).map(_.name).distinct.mkString(", ")
         val response = InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.withContent(s"Multiple possible matches: $cards").some
+          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
         )
-        client.sendInteractionResponse(response, id, token)
+        client.sendInteractionResponse(response, id, token) >> client.sendMessage(s"Did you mean: " ++ others.mkString(", "), channelId).void
     }
   }
 }

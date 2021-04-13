@@ -21,7 +21,7 @@ class CardSearcher(cardList: NonEmptyList[Card]) {
       case _ =>
         cards.find(c => cards.forall(c2 => c2.name.toLowerCase.contains(c.name.toLowerCase))) match {
           case Some(card) => NonEmptyList.one(card)
-          case None       => cards
+          case None       => cards.sortBy(_.name.length)
         }
     }
   }

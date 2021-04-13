@@ -47,12 +47,12 @@ object Main extends IOApp {
       CommandParser.parseCardsAndDecks(content).traverse_ { case Card(name) =>
         cardLookup.card(name, channelId)
       }
-    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "card", Some(commands)), _, _, _, token, _) =>
+    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "card", Some(commands)), _, channelId, _, token, _) =>
       val commandMap = commands.map(c => c.name -> c.value).toMap
       commandMap.get("card-name").flattenOption.flatMap(_.as[String].toOption) match {
         case Some(searchTerm) =>
           val champLevel = commandMap.get("champ-level").flattenOption.flatMap(_.as[Int].toOption)
-          cardLookup.cardSlashCommand(searchTerm, champLevel, id, token)
+          cardLookup.cardSlashCommand(searchTerm, champLevel, id, token, channelId)
         case None =>
           IO.unit
       }
