@@ -17,20 +17,21 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
     }
   }
 
-  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String, channelId: Snowflake): IO[Unit] = IO(println(s"Retrieving card by command: $cardName")) *> {
-    cardSearcher.searchCard(cardName, champLevel) match {
-      case NonEmptyList(card, Nil) =>
-        val response = InteractionResponse(
-          InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
-        )
-        client.sendInteractionResponse(response, id, token)
-      case NonEmptyList(card, others) =>
-        val response = InteractionResponse(
-          InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
-        )
-        client.sendInteractionResponse(response, id, token) >> client.sendMessage(s"Did you mean: " ++ others.mkString(", "), channelId).void
+  def cardSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String, channelId: Snowflake): IO[Unit] =
+    IO(println(s"Retrieving card by command: $cardName")) *> {
+      cardSearcher.searchCard(cardName, champLevel) match {
+        case NonEmptyList(card, Nil) =>
+          val response = InteractionResponse(
+            InteractionResponseType.ChannelMessageWithSource,
+            InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
+          )
+          client.sendInteractionResponse(response, id, token)
+        case NonEmptyList(card, others) =>
+          val response = InteractionResponse(
+            InteractionResponseType.ChannelMessageWithSource,
+            InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
+          )
+          client.sendInteractionResponse(response, id, token) >> client.sendMessage(s"Did you mean: " ++ others.map(_.name).mkString(", "), channelId).void
+      }
     }
-  }
 }
