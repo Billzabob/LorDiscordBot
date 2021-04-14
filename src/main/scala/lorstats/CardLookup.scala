@@ -12,8 +12,8 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
       case NonEmptyList(card, Nil) =>
         client.sendMessage(card.assets.head.gameAbsolutePath.renderString, channelId).void
       case NonEmptyList(card, others) =>
-        val cards = (card :: others).map(_.name).distinct.mkString(", ")
-        client.sendMessage(s"Multiple possible card matches: $cards", channelId).void
+        val otherCards = s"Did you mean: " ++ others.map(_.name).mkString(", ")
+        client.sendMessage(card.assets.head.gameAbsolutePath.renderString, channelId) >> client.sendMessage(otherCards, channelId).void
     }
   }
 
@@ -31,7 +31,8 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
             InteractionResponseType.ChannelMessageWithSource,
             InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.gameAbsolutePath.renderString).some
           )
-          client.sendInteractionResponse(response, id, token) >> client.sendMessage(s"Did you mean: " ++ others.map(_.name).mkString(", "), channelId).void
+          val otherCards = s"Did you mean: " ++ others.map(_.name).mkString(", ")
+          client.sendInteractionResponse(response, id, token) >> client.sendMessage(otherCards, channelId).void
       }
     }
 }
