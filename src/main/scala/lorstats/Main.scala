@@ -43,16 +43,17 @@ object Main extends IOApp {
   }
 
   def handleEvents(cardLookup: CardLookup, quizer: Quizer): Event => IO[Unit] = {
-    case MessageCreate(BasicMessage(_, content, _, channelId)) =>
+    case MessageCreate(BasicMessage(_, content, author, channelId)) =>
       CommandParser.parseCardsAndDecks(content).traverse_ { case Card(name) =>
-        cardLookup.card(name, channelId)
+        cardLookup.card(name, channelId, author.username)
       }
-    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "card", Some(commands)), _, channelId, _, token, _) =>
+    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "card", Some(commands)), _, channelId, member, token, _) =>
       val commandMap = commands.map(c => c.name -> c.value).toMap
       commandMap.get("card-name").flattenOption.flatMap(_.as[String].toOption) match {
         case Some(searchTerm) =>
           val champLevel = commandMap.get("champ-level").flattenOption.flatMap(_.as[Int].toOption)
-          cardLookup.cardSlashCommand(searchTerm, champLevel, id, token, channelId)
+          val user       = member.user.map(_.username).orEmpty
+          cardLookup.cardSlashCommand(searchTerm, champLevel, id, token, channelId, user)
         case None =>
           IO.unit
       }
