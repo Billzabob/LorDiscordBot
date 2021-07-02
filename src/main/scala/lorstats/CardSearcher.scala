@@ -9,7 +9,7 @@ class CardSearcher(cardList: NonEmptyList[Card]) {
 
   def searchCard(searchTerm: String, champLevel: Option[Int]): NonEmptyList[Card] = {
     val cardNameMap = cardList.flatMap { card =>
-      val a = card.name.split(' ').sliding(searchTerm.split(' ').size).map(_.mkString(" ")).map(_ -> card)
+      val a = card.name.filterNot(_ == ',').split(' ').sliding(searchTerm.split(' ').size).map(_.mkString(" ")).map(_ -> card)
       NonEmptyList.fromListUnsafe(a.toList) // .split always returns at least 1
     }
 

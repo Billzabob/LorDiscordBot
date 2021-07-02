@@ -18,7 +18,7 @@ class ImageStuff(client: Client[IO])(implicit cs: ContextShift[IO]) {
     fs2.io.toInputStreamResource(request).flatMap { bytes =>
       println(card.assets.head.gameAbsolutePath.renderString)
       println(card.name)
-      val image = ImmutableImage.loader().fromStream(bytes)
+      val image = ImmutableImage.loader().withClassLoader(this.getClass().getClassLoader()).fromStream(bytes)
       val rows  = image.rows
       val nameCoordinates = for {
         startRow <- rows.reverseIterator.drop(140).find(_.exists(_.toColor == RGBColor.fromAwt(Color.WHITE)))
