@@ -27,7 +27,7 @@ class LorApiClient(client: Client[IO], riotToken: String) extends CirceEntityDec
     riotApiRequest[List[String]](s"lor/match/v1/matches/by-puuid/$puuid/ids")
 
   def getCards: IO[NonEmptyList[Card]] = {
-    val sets = NonEmptyList.of("set1", "set2", "set3", "set4")
+    val sets = NonEmptyList.of("set1", "set2", "set3", "set4", "set5")
     sets.flatTraverse { set =>
       client.expect[NonEmptyList[Card]](Request[IO](uri = uri"https://dd.b.pvp.net".addPath(s"latest/$set/en_us/data/$set-en_us.json")))
     }
