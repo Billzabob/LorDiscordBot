@@ -42,19 +42,12 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
   def cardArtSlashCommand(cardName: String, champLevel: Option[Int], id: Snowflake, token: String, channelId: Snowflake, username: String): IO[Unit] = {
     val cards = cardSearcher.searchCard(cardName, champLevel)
     val sendResponse = cards match {
-      case NonEmptyList(card, Nil) =>
+      case NonEmptyList(card, _) =>
         val response = InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
           InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.fullAbsolutePath.renderString).some
         )
-        client.sendInteractionResponse(response, id, token)
-      case NonEmptyList(card, others) =>
-        val response = InteractionResponse(
-          InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.fullAbsolutePath.renderString).some
-        )
-        val otherCards = s"Did you mean: " ++ others.map(_.name).mkString(", ")
-        client.sendInteractionResponse(response, id, token) >> client.sendMessage(otherCards, channelId).void
+        client.sendMessage(card.name, channelId) >> client.sendInteractionResponse(response, id, token) >> client.sendMessage(card.flavorText, channelId).void
     }
     IO(println(s"Retrieving card art by command for $username: $cardName, found ${cards.map(_.name).map(name => s"'$name'").intercalate(", ")}")) *> sendResponse
   }
