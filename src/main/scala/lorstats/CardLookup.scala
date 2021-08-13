@@ -45,7 +45,14 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
       case NonEmptyList(card, _) =>
         val response = InteractionResponse(
           InteractionResponseType.ChannelMessageWithSource,
-          InteractionApplicationCommandCallbackData.make.withContent(card.assets.head.fullAbsolutePath.renderString).some
+          InteractionApplicationCommandCallbackData.make
+            .addEmbed(
+              Embed.make
+                .withImage(Image(Some(card.assets.head.fullAbsolutePath), none, none, none))
+                .withTitle(card.name)
+                .withDescription(card.flavorText)
+            )
+            .some
         )
         client.sendMessage(card.name, channelId) >> client.sendInteractionResponse(response, id, token) >> client.sendMessage(card.flavorText, channelId).void
     }
