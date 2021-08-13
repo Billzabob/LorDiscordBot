@@ -57,6 +57,16 @@ object Main extends IOApp {
         case None =>
           IO.unit
       }
+    case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "card-art", Some(commands)), _, channelId, member, token, _) =>
+      val commandMap = commands.map(c => c.name -> c.value).toMap
+      commandMap.get("card-name").flattenOption.flatMap(_.as[String].toOption) match {
+        case Some(searchTerm) =>
+          val champLevel = commandMap.get("champ-level").flattenOption.flatMap(_.as[Int].toOption)
+          val user       = member.user.map(_.username).orEmpty
+          cardLookup.cardArtSlashCommand(searchTerm, champLevel, id, token, channelId, user)
+        case None =>
+          IO.unit
+      }
     case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "quiz", _), _, channel, _, token, _) =>
       quizer.sendQuiz(channel, id, token)
     case InteractionCreate(id, _, ApplicationCommandInteractionData(_, "answer", Some(commands)), _, channel, member, token, _) =>
