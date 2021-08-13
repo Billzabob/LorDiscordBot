@@ -62,14 +62,14 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
 
   private val getColorForRegion: String => Color = {
     case "BandleCity" => Color(196, 205, 70)
-    case "ShadowIsles" => Color(4, 61, 48)
-    case "Ionia" => Color(80, 47, 58)
-    case "PiltoverZaun" => Color(92, 66, 33)
-    case "Noxus" => Color(75, 28, 26)
-    case "Demacia" => Color(87, 81, 64)
-    case "Bilgewater" => Color(65, 30, 20)
+    case "ShadowIsles" => Color(82, 179, 157)
+    case "Ionia" => Color(196, 132, 155)
+    case "PiltoverZaun" => Color(231, 153, 108)
+    case "Noxus" => Color(182, 83, 77)
+    case "Demacia" => Color(238, 230, 208)
+    case "Bilgewater" => Color(179, 100, 51)
     case "Shurima" => Color(245, 208, 46)
     case "Targon" => Color(140, 91, 254)
-    case "Freljord" => Color(42, 83, 97)
+    case "Freljord" => Color(191, 231, 250)
   }
 }
