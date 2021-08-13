@@ -51,11 +51,25 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
                 .withImage(Image(Some(card.assets.head.fullAbsolutePath), none, none, none))
                 .withTitle(card.name)
                 .withFooter(Footer(card.flavorText, none, none))
+                .withColor(getColorForRegion(card.regionRef))
             )
             .some
         )
         client.sendInteractionResponse(response, id, token)
     }
     IO(println(s"Retrieving card art by command for $username: $cardName, found ${cards.map(_.name).map(name => s"'$name'").intercalate(", ")}")) *> sendResponse
+  }
+
+  private val getColorForRegion: String => Color = {
+    case "BandleCity" => Color(196, 205, 70)
+    case "ShadowIsles" => Color(4, 61, 48)
+    case "Ionia" => Color(80, 47, 58)
+    case "PiltoverZaun" => Color(92, 66, 33)
+    case "Noxus" => Color(75, 28, 26)
+    case "Demacia" => Color(87, 81, 64)
+    case "Bilgewater" => Color(65, 30, 20)
+    case "Shurima" => Color(245, 208, 46)
+    case "Targon" => Color(140, 91, 254)
+    case "Freljord" => Color(42, 83, 97)
   }
 }
