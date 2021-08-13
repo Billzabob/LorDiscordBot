@@ -5,7 +5,6 @@ import cats.effect.IO
 import cats.syntax.all._
 import dissonance.data._
 import dissonance.DiscordClient
-import org.http4s.Uri
 
 class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
   def card(cardName: String, channelId: Snowflake, username: String): IO[Unit] = {
