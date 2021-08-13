@@ -5,6 +5,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import dissonance.data._
 import dissonance.DiscordClient
+import org.http4s.Uri
 
 class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
   def card(cardName: String, channelId: Snowflake, username: String): IO[Unit] = {
@@ -61,15 +62,15 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
   }
 
   private val getColorForRegion: String => Color = {
-    case "BandleCity" => Color(196, 205, 70)
-    case "ShadowIsles" => Color(82, 179, 157)
-    case "Ionia" => Color(196, 132, 155)
-    case "PiltoverZaun" => Color(231, 153, 108)
-    case "Noxus" => Color(182, 83, 77)
-    case "Demacia" => Color(238, 230, 208)
-    case "Bilgewater" => Color(179, 100, 51)
-    case "Shurima" => Color(245, 208, 46)
+    case "BandleCity" => Color(184, 205, 31)
+    case "ShadowIsles" => Color(52, 114, 100)
+    case "Ionia" => Color(200, 119, 144)
+    case "PiltoverZaun" => Color(222, 149, 107)
+    case "Noxus" => Color(150, 72, 70)
+    case "Demacia" => Color(183, 167, 120)
+    case "Bilgewater" => Color(171, 76, 51)
+    case "Shurima" => Color(225, 151, 43)
     case "Targon" => Color(140, 91, 254)
-    case "Freljord" => Color(191, 231, 250)
+    case "Freljord" => Color(80, 175, 213)
   }
 }
