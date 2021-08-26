@@ -37,6 +37,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
 
     val width = (playerChampCount + opponentChampCount) * 150 + 68
 
+    // TODO: Filter out multi-region cards
     val playerRegionsHtml   = player.factions.map(factionToIcon).foldMap(regionHtml)
     val opponentRegionsHtml = opponent.map(_.factions.map(factionToIcon)).orEmpty.foldMap(regionHtml)
 
@@ -126,6 +127,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
     case "faction_Noxus_Name"       => "noxus"
     case "faction_Freljord_Name"    => "freljord"
     case "faction_Shurima_Name"     => "shurima"
+    case "faction_BandleCity_Name"  => "bandlecity"
     case other                      => throw new Exception(s"Unknown faction: $other")
   }
 }
