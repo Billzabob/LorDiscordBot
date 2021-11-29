@@ -51,13 +51,18 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
                 .withImage(Image(Some(card.assets.head.fullAbsolutePath), none, none, none))
                 .withTitle(card.name)
                 .withFooter(Footer(card.flavorText, none, none))
-                .withColor(getColorForRegion(card.regionRef))
+                .withColor(getColorForRegion(getRegion(card.regionRefs)))
             )
             .some
         )
         client.sendInteractionResponse(response, id, token)
     }
     IO(println(s"Retrieving card art by command for $username: $cardName, found ${cards.map(_.name).map(name => s"'$name'").intercalate(", ")}")) *> sendResponse
+  }
+
+  def getRegion(regions: NonEmptyList[String]): String = regions match {
+    case NonEmptyList(region, Nil) => region
+    case multiple => multiple.toList.filterNot(_ == "BandleCity").head
   }
 
   private val getColorForRegion: String => Color = {
