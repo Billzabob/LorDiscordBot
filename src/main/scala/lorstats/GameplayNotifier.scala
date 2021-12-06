@@ -33,7 +33,7 @@ class GameplayNotifier(riotToken: String, discord: Discord, db: DB, cards: NonEm
     (notify ++ fs2.Stream.sleep_(2.minutes)).repeat
   }
 
-  private def formatMatch(game: GameInfo) = {
+  private def formatMatch(game: GameInfo) = lorClient.getMastersRank(game.account.gameName).flatMap { rank =>
     val player = game.game.info.players.find(_.puuid == game.account.puuid).getOrElse(throw new Exception(s"Couldn't find player"))
     val (winOrLose, color) = player.gameOutcome match {
       case "win"  => "WON"  -> Color.green
@@ -49,7 +49,7 @@ class GameplayNotifier(riotToken: String, discord: Discord, db: DB, cards: NonEm
       .withDescription(
         "[" + game.account.gameName + "'s Deck](https://lor.mobalytics.gg/decks/code/" + player.deckCode + ")" + opponent
           .map(op => "\n[" + game.opponent.get.gameName + "'s Deck](https://lor.mobalytics.gg/decks/code/" + op.deckCode + ")")
-          .orEmpty
+          .orEmpty + rank.map(rank => "\n" + game.account.gameName + "'s Masters Rank: " + rank).orEmpty
       )
       .withColor(color)
 

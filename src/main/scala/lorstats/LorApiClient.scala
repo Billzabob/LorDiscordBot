@@ -33,6 +33,10 @@ class LorApiClient(client: Client[IO], riotToken: String) extends CirceEntityDec
     }
   }
 
+  def getMastersRank(gameName: String): IO[Option[Int]] = {
+    riotApiRequest[List[MastersPlayer]](s"lor/ranked/v1/leaderboards").map(_.find(_.name == gameName).map(_.rank))
+  }
+
   private def riotApiRequest[A](path: String)(implicit d: EntityDecoder[IO, A]): IO[A] =
     client
       .expect[A](

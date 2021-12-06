@@ -62,19 +62,19 @@ class CardLookup(client: DiscordClient, cardSearcher: CardSearcher) {
 
   def getRegion(regions: NonEmptyList[String]): String = regions match {
     case NonEmptyList(region, Nil) => region
-    case multiple => multiple.toList.filterNot(_ == "BandleCity").head
+    case multiple                  => multiple.toList.filterNot(_ == "BandleCity").head
   }
 
   private val getColorForRegion: String => Color = {
-    case "BandleCity" => Color(184, 205, 31)
-    case "ShadowIsles" => Color(52, 114, 100)
-    case "Ionia" => Color(200, 119, 144)
+    case "BandleCity"   => Color(184, 205, 31)
+    case "ShadowIsles"  => Color(52, 114, 100)
+    case "Ionia"        => Color(200, 119, 144)
     case "PiltoverZaun" => Color(222, 149, 107)
-    case "Noxus" => Color(150, 72, 70)
-    case "Demacia" => Color(183, 167, 120)
-    case "Bilgewater" => Color(171, 76, 51)
-    case "Shurima" => Color(225, 151, 43)
-    case "Targon" => Color(140, 91, 254)
-    case "Freljord" => Color(80, 175, 213)
+    case "Noxus"        => Color(150, 72, 70)
+    case "Demacia"      => Color(183, 167, 120)
+    case "Bilgewater"   => Color(171, 76, 51)
+    case "Shurima"      => Color(225, 151, 43)
+    case "Targon"       => Color(140, 91, 254)
+    case "Freljord"     => Color(80, 175, 213)
   }
 }

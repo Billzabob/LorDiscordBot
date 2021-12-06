@@ -19,7 +19,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
       .decode(player.deckCode)
       .toOption
       .map { d =>
-        val deck   = d.cards.map { case (card, _) => cards.find(_.cardCode == card.code).getOrElse(throw new Exception(s"No match for card $card")) }.toList
+        val deck   = d.cards.map { case (card, _) => cards.find(_.cardCode == card.code) }.toList.flattenOption
         val champs = deck.filter(_.supertype == "Champion")
         (champs.map(_.cardCode).foldMap(champHtml), champs.size)
       }
@@ -29,7 +29,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
       .map(_.deckCode)
       .flatMap(code => Deck.decode(code).toOption)
       .map { d =>
-        val deck   = d.cards.map { case (card, _) => cards.find(_.cardCode == card.code).getOrElse(throw new Exception(s"No match for card $card")) }.toList
+        val deck   = d.cards.map { case (card, _) => cards.find(_.cardCode == card.code) }.toList.flattenOption
         val champs = deck.filter(_.supertype == "Champion")
         (champs.map(_.cardCode).foldMap(champHtml), champs.size)
       }
