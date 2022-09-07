@@ -112,7 +112,7 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
     </html>"""
 
   private def champHtml(code: String) =
-    s"<img class=champ src='https://lor-cdn.s3.eu-central-1.amazonaws.com/cards-img/cropped-panels/$code-full.jpg' width=146 height=200>"
+    s"<img class=champ src='https://masteringruneterra.com/wp-content/plugins/deck-viewer/assets/images/champions/$code.webp' width=190 height=190>"
 
   private def regionHtml(region: String) =
     s"<img class=region src='https://dd.b.pvp.net/latest/core/en_us/img/regions/icon-$region.png' width=45>"
