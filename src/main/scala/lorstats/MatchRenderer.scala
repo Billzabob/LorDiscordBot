@@ -38,8 +38,8 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
     val width = (playerChampCount + opponentChampCount) * 150 + 68
 
     // TODO: Filter out multi-region cards
-    val playerRegionsHtml   = player.factions.map(factionToIcon).foldMap(regionHtml)
-    val opponentRegionsHtml = opponent.map(_.factions.map(factionToIcon)).orEmpty.foldMap(regionHtml)
+    val playerRegionsHtml   = player.factions.map(factionToIcon).flattenOption.foldMap(regionHtml)
+    val opponentRegionsHtml = opponent.map(_.factions.map(factionToIcon).flattenOption).orEmpty.foldMap(regionHtml)
 
     val imageHtml = html(account.gameName, opp.map(_.gameName).orEmpty, playerChampHtml, opponentChampHtml, playerRegionsHtml, opponentRegionsHtml)
 
@@ -118,16 +118,16 @@ class MatchRenderer(cards: NonEmptyList[Card]) {
     s"<img class=region src='https://dd.b.pvp.net/latest/core/en_us/img/regions/icon-$region.png' width=45>"
 
   private def factionToIcon(faction: String) = faction match {
-    case "faction_Bilgewater_Name"  => "bilgewater"
-    case "faction_Piltover_Name"    => "piltoverzaun"
-    case "faction_Demacia_Name"     => "demacia"
-    case "faction_MtTargon_Name"    => "targon"
-    case "faction_Ionia_Name"       => "ionia"
-    case "faction_ShadowIsles_Name" => "shadowisles"
-    case "faction_Noxus_Name"       => "noxus"
-    case "faction_Freljord_Name"    => "freljord"
-    case "faction_Shurima_Name"     => "shurima"
-    case "faction_BandleCity_Name"  => "bandlecity"
-    case other                      => throw new Exception(s"Unknown faction: $other")
+    case "faction_Bilgewater_Name"  => "bilgewater".some
+    case "faction_Piltover_Name"    => "piltoverzaun".some
+    case "faction_Demacia_Name"     => "demacia".some
+    case "faction_MtTargon_Name"    => "targon".some
+    case "faction_Ionia_Name"       => "ionia".some
+    case "faction_ShadowIsles_Name" => "shadowisles".some
+    case "faction_Noxus_Name"       => "noxus".some
+    case "faction_Freljord_Name"    => "freljord".some
+    case "faction_Shurima_Name"     => "shurima".some
+    case "faction_BandleCity_Name"  => "bandlecity".some
+    case _                          => none
   }
 }
